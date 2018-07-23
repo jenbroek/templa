@@ -13,17 +13,6 @@ import (
 	"text/template"
 )
 
-type stringSlice []string
-
-func (sl *stringSlice) String() string {
-	return fmt.Sprint(*sl)
-}
-
-func (sl *stringSlice) Set(value string) error {
-	*sl = append(*sl, value)
-	return nil
-}
-
 var (
 	ctxFile     string
 	globPattern stringSlice
@@ -37,14 +26,9 @@ var (
 	ctxDir    = flag.String("c", getXdgDir(), "look in `directory` for context files")
 )
 
-func init() {
-	flag.Var(&globPattern, "p", "glob `pattern` of files to parse")
-
-	flag.Usage = func() {
-		usage()
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
+func usage() {
+	fmt.Fprintf(os.Stderr, "usage: %s [-hl] | [-i] [-d delims] "+
+		"[-c context_dir] [-p pattern ...] context_file\n", programName)
 }
 
 func run() int {
@@ -79,7 +63,7 @@ func run() int {
 		}
 	}
 
-	var files []string
+	var paths []string
 	for _, g := range globPattern {
 		matches, err := filepath.Glob(g)
 		if err != nil {
@@ -88,11 +72,11 @@ func run() int {
 		}
 
 		for _, m := range matches {
-			files = append(files, m)
+			paths = append(paths, m)
 		}
 	}
 
-	if len(files) == 0 {
+	if len(paths) == 0 {
 		return 0
 	}
 
@@ -102,45 +86,44 @@ func run() int {
 		return 1
 	}
 
-	for _, file := range files {
-		info, err := os.Stat(file)
+	for _, path := range paths {
+		fileInfo, err := os.Stat(path)
 		if err != nil {
 			warn(err)
 			continue
 		}
-		if info.IsDir() {
+		if fileInfo.IsDir() {
 			continue
 		}
 
 		// BUG
 		// parsing multiple files in different directories
 		// overwrites previous file with same basename
-		tplName := filepath.Base(file)
+		tplName := filepath.Base(path)
 
-		tpl, err := template.New(tplName).Delims(delims[0], delims[1]).ParseFiles(file)
+		tpl, err := template.New(tplName).Delims(delims[0], delims[1]).ParseFiles(path)
 		if err != nil {
 			warn(err)
 			continue
 		}
 
-		destPath := filepath.Join(
-			"..",
+		path := filepath.Join("..",
 			strings.Join(
-				strings.Split(file, string(os.PathSeparator))[1:],
+				strings.Split(path, string(os.PathSeparator))[1:],
 				string(os.PathSeparator),
 			),
 		)
 
-		if err := os.MkdirAll(filepath.Dir(destPath), 0777); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 			warn(err)
 			continue
 		}
 
-		if i, err := os.Stat(destPath); err == nil && i.IsDir() {
+		if i, err := os.Stat(path); err == nil && i.IsDir() {
 			warn("path '%s' is an existing directory, skipping")
 			continue
 		} else if *askFlag {
-			fmt.Printf("file '%s' already exists, overwrite file? [n/Y] ", destPath)
+			fmt.Printf("file '%s' already exists, overwrite file? [n/Y] ", path)
 
 			var ok string
 			if _, err := fmt.Scanln(&ok); err != nil && err.Error() != "unexpected newline" {
@@ -153,15 +136,14 @@ func run() int {
 			}
 		}
 
-		// TODO os.O_RDWR -> os.O_WRONLY?
-		destFile, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode())
+		file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, fileInfo.Mode())
 		if err != nil {
 			warn(err)
 			continue
 		}
-		defer destFile.Close()
+		defer file.Close()
 
-		if err := tpl.ExecuteTemplate(destFile, tplName, ctx); err != nil {
+		if err := tpl.ExecuteTemplate(file, tplName, ctx); err != nil {
 			warn(err)
 			continue
 		}
@@ -175,17 +157,13 @@ func usage() {
 		"[-c context_dir] [-p pattern ...] context_file\n", programName)
 }
 
-func getXdgDir() string {
-	xdgDir := os.Getenv("XDG_CONFIG_HOME")
-	if xdgDir == "" {
-		xdgDir = filepath.Join(os.Getenv("HOME"), ".config")
+func init() {
+	flag.Var(&globPattern, "p", "glob `pattern` of files to parse")
+
+	flag.Usage = func() {
+		usage()
+		flag.PrintDefaults()
 	}
-
-	return filepath.Join(xdgDir, "templa")
-}
-
-func warn(a ...interface{}) {
-	fmt.Fprintln(os.Stderr, programName+":", a)
 }
 
 func main() {
@@ -201,12 +179,12 @@ func main() {
 	switch {
 	case *helpFlag:
 		flag.Usage()
+		os.Exit(1)
 	case *listFlag:
 		files, _ := filepath.Glob(filepath.Join(*ctxDir, "*.json"))
 		for _, f := range files {
 			fmt.Println(strings.TrimSuffix(filepath.Base(f), ".json"))
 		}
-
 		os.Exit(0)
 	case flag.NArg() == 0:
 		usage()
