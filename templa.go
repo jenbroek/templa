@@ -119,6 +119,7 @@ func run() int {
 			continue
 		}
 
+		// BUG race condition between os.Stat and os.OpenFile
 		if i, err := os.Stat(path); err == nil && i.IsDir() {
 			warn("path '%s' is an existing directory, skipping")
 			continue
