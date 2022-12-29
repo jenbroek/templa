@@ -1,0 +1,84 @@
+.Dd 2022-12-16
+.Dt TEMPLA 1
+.Os
+.Sh NAME
+.Nm templa
+.Nd Go templating utility
+.Sh SYNOPSIS
+.Nm
+.Op Fl v
+.Op Fl o Ar OPEN_DELIM
+.Op Fl c Ar CLOSE_DELIM
+.Op Oo Fl f Ar VALUE_FILE Oc ...
+.Op Fl -
+.Op Ar FILE
+.Sh DESCRIPTION
+.Nm
+is a Go templating utility that executes
+.Ar FILE
+as a template according to
+.Lk https://pkg.go.dev/text/template ,
+optionally using the delimiters
+.Ar OPEN_DELIM
+and
+.Ar CLOSE_DELIM .
+
+If no
+.Ar FILE
+is given,
+.Nm
+reads from stdin.
+
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl v
+Print version information to stderr and exit.
+.It Fl o Ar OPEN_DELIM
+Define the opening delimiter (default:
+.Sq {{ ) .
+.It Fl c Ar CLOSE_DELIM
+Define the closing delimiter (default:
+.Sq }} ) .
+.It Fl f Ar VALUE_FILE
+A value file to use as data for the template. When multiple value files are specified with a duplicate key between them, the last specified value file's value for the key results.
+.El
+.Sh IMPLEMENTATION NOTES
+Currently only YAML is supported as format for value files.
+.Sh EXAMPLES
+Parse
+.Sq options.conf
+and redirect stdout to
+.Sq ../options.conf ,
+using data from
+.Sq values.yaml
+.Bd -filled -offset indent
+$
+.Nm
+-f values.yaml
+options.conf > ../options.conf
+.Ed
+
+Parse commands between delimiters
+.Sq [[
+and
+.Sq ]]
+in
+.Sq options.conf ,
+using data from
+.Sq personal.yaml
+and
+.Sq work.yaml
+.Bd -filled -offset indent
+$
+.Nm
+-f personal.yaml -f work.yaml -o [[ -c ]] options.conf
+.Ed
+
+Redirect a here-document to
+.Nm
+.Bd -filled -offset indent
+$
+.Nm
+-f values.yaml
+<< 'EOF'
+.Ed

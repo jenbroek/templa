@@ -1,31 +1,21 @@
 package main
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-)
+func mergeMaps(out map[string]any, in map[string]any) {
+	for k, v := range in {
+		if existingVal, ok := out[k]; ok {
+			switch existingVal := existingVal.(type) {
+			case map[string]any:
+				if nv, ok := v.(map[string]any); ok {
+					mergeMaps(existingVal, nv)
+					continue
+				}
+			case []any:
+				if nv, ok := v.([]any); ok {
+					v = append(existingVal, nv...)
+				}
+			}
+		}
 
-type stringSlice []string
-
-func (sl *stringSlice) String() string {
-	return fmt.Sprint(*sl)
-}
-
-func (sl *stringSlice) Set(value string) error {
-	*sl = append(*sl, value)
-	return nil
-}
-
-func warn(a ...interface{}) {
-	fmt.Fprintln(os.Stderr, programName+":", a)
-}
-
-func getXdgDir() string {
-	xdgDir := os.Getenv("XDG_CONFIG_HOME")
-	if xdgDir == "" {
-		xdgDir = filepath.Join(os.Getenv("HOME"), ".config")
+		out[k] = v
 	}
-
-	return filepath.Join(xdgDir, "templa")
 }
