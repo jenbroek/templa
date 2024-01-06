@@ -47,19 +47,18 @@ func main() {
 	}
 }
 
-func run(tmplPaths []string) (err error) {
+func run(tmplPaths []string) error {
 	tmpl, err := parseTemplates(tmplPaths)
 	if err != nil {
-		return
+		return err
 	}
 
 	data, err := readValueFiles()
 	if err != nil {
-		return
+		return err
 	}
 
-	err = tmpl.ExecuteTemplate(os.Stdout, tmpl.Name(), data)
-	return
+	return tmpl.ExecuteTemplate(os.Stdout, tmpl.Name(), data)
 }
 
 func parseTemplates(tmplPaths []string) (*template.Template, error) {
@@ -107,26 +106,27 @@ func readValueFiles() (map[string]any, error) {
 	return data, nil
 }
 
-func readTemplateFile(tmplPath string) (tmplName string, bytes []byte, err error) {
-	if tmplName, err = resolveTemplateName(tmplPath); err != nil {
-		return
+func readTemplateFile(tmplPath string) (string, []byte, error) {
+	tmplName, err := resolveTemplateName(tmplPath)
+	if err != nil {
+		return "", nil, err
 	}
 
 	// `template#Template.ParseFiles` forces the template name to be the basename
 	// of the specified path(s). In order to use the full (relative) path, we
 	// must call `template#Template.Parse` ourselves.
-	bytes, err = os.ReadFile(tmplPath)
-	return
+	bytes, err := os.ReadFile(tmplPath)
+	return tmplName, bytes, err
 }
 
-func resolveTemplateName(tmplPath string) (tmplName string, err error) {
+func resolveTemplateName(tmplPath string) (string, error) {
 	if !filepath.IsAbs(tmplPath) {
 		return tmplPath, nil
 	}
 
 	invokePath, err := os.Executable()
 	if err != nil {
-		return
+		return "", err
 	}
 
 	return filepath.Rel(filepath.Dir(invokePath), tmplPath)
