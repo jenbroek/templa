@@ -14,10 +14,10 @@ var (
 	VERSION     string
 	programName = filepath.Base(os.Args[0])
 
-	openDelim     = pflag.StringP("open-delim", "o", "{{", "Define the opening delimiter")
-	closeDelim    = pflag.StringP("close-delim", "c", "}}", "Define the closing delimiter")
-	templateFiles = pflag.StringSliceP("values", "f", []string{}, "List of value files to use for templating")
-	versionFlag   = pflag.CountP("version", "v", "Print version information to stderr and exit")
+	openDelim   = pflag.StringP("open-delim", "o", "{{", "Define the opening delimiter")
+	closeDelim  = pflag.StringP("close-delim", "c", "}}", "Define the closing delimiter")
+	valueFiles  = pflag.StringSliceP("values", "f", []string{}, "List of value files to use for templating")
+	versionFlag = pflag.CountP("version", "v", "Print version information to stderr and exit")
 )
 
 func init() {
@@ -90,8 +90,8 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 func readValueFiles() (map[string]any, error) {
 	data := make(map[string]any)
 
-	for _, tmplFile := range *templateFiles {
-		bytes, err := os.ReadFile(tmplFile)
+	for _, valueFile := range *valueFiles {
+		bytes, err := os.ReadFile(valueFile)
 		if err != nil {
 			return data, err
 		}
