@@ -65,6 +65,9 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 	var parentTmpl *template.Template
 
 	for _, tmplPath := range tmplPaths {
+		// `template#Template.ParseFiles` forces the template name to be the basename
+		// of the specified path(s). In order to use the full (relative) path, we
+		// must call `template#Template.Parse` ourselves.
 		tmplName, bytes, err := readTemplateFile(tmplPath)
 		if err != nil {
 			return parentTmpl, err
@@ -107,27 +110,11 @@ func readValueFiles() (map[string]any, error) {
 }
 
 func readTemplateFile(tmplPath string) (string, []byte, error) {
-	tmplName, err := resolveTemplateName(tmplPath)
+	tmplName, err := relPath(tmplPath)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// `template#Template.ParseFiles` forces the template name to be the basename
-	// of the specified path(s). In order to use the full (relative) path, we
-	// must call `template#Template.Parse` ourselves.
 	bytes, err := os.ReadFile(tmplPath)
 	return tmplName, bytes, err
-}
-
-func resolveTemplateName(tmplPath string) (string, error) {
-	if !filepath.IsAbs(tmplPath) {
-		return tmplPath, nil
-	}
-
-	invokePath, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Rel(filepath.Dir(invokePath), tmplPath)
 }
