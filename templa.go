@@ -120,14 +120,14 @@ func readTemplateFile(tmplPath string) (tmplName string, bytes []byte, err error
 }
 
 func resolveTemplateName(tmplPath string) (tmplName string, err error) {
-	// Make both paths absolute to avoid an error when calling
-	// `filepath.Rel` while either one of them isn't absolute.
-	invokePath, err := filepath.Abs(os.Args[0])
-	tmplPath, err = filepath.Abs(tmplPath)
+	if !filepath.IsAbs(tmplPath) {
+		return tmplPath, nil
+	}
+
+	invokePath, err := os.Executable()
 	if err != nil {
 		return
 	}
 
-	tmplName, err = filepath.Rel(filepath.Dir(invokePath), tmplPath)
-	return
+	return filepath.Rel(filepath.Dir(invokePath), tmplPath)
 }
