@@ -68,17 +68,17 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 		// `template#Template.ParseFiles` forces the template name to be the basename
 		// of the specified path(s). In order to use the full (relative) path, we
 		// must call `template#Template.Parse` ourselves.
-		tmplName, bytes, err := readTemplateFile(tmplPath)
+		bytes, err := os.ReadFile(tmplPath)
 		if err != nil {
 			return parentTmpl, err
 		}
 
 		var tmpl *template.Template
 		if parentTmpl == nil {
-			parentTmpl = template.New(tmplName)
+			parentTmpl = template.New(tmplPath)
 			tmpl = parentTmpl
 		} else {
-			tmpl = parentTmpl.New(tmplName)
+			tmpl = parentTmpl.New(tmplPath)
 		}
 
 		if _, err = tmpl.Delims(*openDelim, *closeDelim).Option("missingkey=zero").Parse(string(bytes)); err != nil {
@@ -107,14 +107,4 @@ func readValueFiles() (map[string]any, error) {
 	}
 
 	return data, nil
-}
-
-func readTemplateFile(tmplPath string) (string, []byte, error) {
-	tmplName, err := relPath(tmplPath)
-	if err != nil {
-		return "", nil, err
-	}
-
-	bytes, err := os.ReadFile(tmplPath)
-	return tmplName, bytes, err
 }
