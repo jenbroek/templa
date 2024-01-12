@@ -5,36 +5,25 @@
 
 include config.mk
 
-SRC = templa.go util.go
+all: build
 
-all: options templa
-
-options:
-	@echo templa build options:
-	@echo LDFLAGS = $(LDFLAGS)
-
-templa:
+build:
 	go build -ldflags $(LDFLAGS)
 
 clean:
-	rm -f templa templa-$(VERSION).tar.gz
+	go clean
+	rm -f templa-$(VERSION).tar.gz
 
 dist: clean
-	mkdir -p templa-$(VERSION)
-	cp -R LICENSE Makefile README.md config.mk $(SRC) go.mod go.sum templa.1 templa-$(VERSION)
-	tar -cf templa-$(VERSION).tar templa-$(VERSION)
-	gzip templa-$(VERSION).tar
+	install -Dt templa-$(VERSION) LICENSE README.md config.mk Makefile *.go go.mod go.sum templa.1
+	tar czf templa-$(VERSION).tar.gz templa-$(VERSION)
 	rm -rf templa-$(VERSION)
 
 install: all
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f templa $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/templa
-	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
-	cp -f templa.1 $(DESTDIR)$(MANPREFIX)/man1
-	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/templa.1
+	install -Dt $(DESTDIR)$(PREFIX)/bin -m755 templa
+	install -Dt $(DESTDIR)$(MANPREFIX)/man1 -m644 templa.1
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/templa $(DESTDIR)$(MANPREFIX)/man1/templa.1
 
-.PHONY: all options templa clean dist install uninstall
+.PHONY: all build clean dist install uninstall

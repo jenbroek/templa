@@ -6,4 +6,4 @@ PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
 # flags
-LDFLAGS = '-X main.VERSION=$(VERSION)'
+LDFLAGS = '-w -s -X main.VERSION=$(VERSION)'
