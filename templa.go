@@ -70,7 +70,7 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 		// must call `template#Template.Parse` ourselves.
 		bytes, err := os.ReadFile(tmplPath)
 		if err != nil {
-			return parentTmpl, err
+			return nil, err
 		}
 
 		var tmpl *template.Template
@@ -82,7 +82,7 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 		}
 
 		if _, err = tmpl.Delims(*openDelim, *closeDelim).Option("missingkey=zero").Parse(string(bytes)); err != nil {
-			return parentTmpl, err
+			return nil, err
 		}
 	}
 
@@ -95,16 +95,16 @@ func readValueFiles() (map[string]any, error) {
 	for _, valueFile := range *valueFiles {
 		bytes, err := os.ReadFile(valueFile)
 		if err != nil {
-			return data, err
+			return nil, err
 		}
 
 		m := make(map[string]any)
 		if err = yaml.Unmarshal(bytes, m); err != nil {
-			return data, err
+			return nil, err
 		}
 
 		if err = mergeMaps(data, m); err != nil {
-			return data, err
+			return nil, err
 		}
 	}
 
