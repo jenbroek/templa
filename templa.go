@@ -103,7 +103,9 @@ func readValueFiles() (map[string]any, error) {
 			return data, err
 		}
 
-		mergeMaps(data, m)
+		if err = mergeMaps(data, m); err != nil {
+			return data, err
+		}
 	}
 
 	return data, nil

@@ -1,21 +1,37 @@
 package main
 
-func mergeMaps(out map[string]any, in map[string]any) {
-	for k, v := range in {
-		if existingVal, ok := out[k]; ok {
-			switch existingVal := existingVal.(type) {
+import "fmt"
+
+var errDifferentTypes = fmt.Errorf("cannot merge different map/slice types")
+
+func mergeMaps(dst map[string]any, src map[string]any) error {
+	if dst == nil {
+		return nil
+	}
+
+	for sK, sV := range src {
+		if dV, ok := dst[sK]; ok {
+			switch dV := dV.(type) {
 			case map[string]any:
-				if nv, ok := v.(map[string]any); ok {
-					mergeMaps(existingVal, nv)
+				if v, ok := sV.(map[string]any); ok {
+					if err := mergeMaps(dV, v); err != nil {
+						return err
+					}
 					continue
+				} else {
+					return errDifferentTypes
 				}
 			case []any:
-				if nv, ok := v.([]any); ok {
-					v = append(existingVal, nv...)
+				if v, ok := sV.([]any); ok {
+					sV = append(dV, v...)
+				} else {
+					return errDifferentTypes
 				}
 			}
 		}
 
-		out[k] = v
+		dst[sK] = sV
 	}
+
+	return nil
 }
