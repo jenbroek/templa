@@ -2,15 +2,13 @@ package main_test
 
 import (
 	"bytes"
-	"cmp"
-	"fmt"
-	"reflect"
-	"slices"
 	"testing"
 	"testing/fstest"
 	"text/template"
 
 	. "github.com/jensbrks/templa"
+	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRun(t *testing.T) {
@@ -23,11 +21,11 @@ func TestRun(t *testing.T) {
 	valueFiles := []string{"data.yaml"}
 
 	want := "hello Bob"
+	err := Run(&wr, fsys, tmplPaths, valueFiles)
+	got := wr.String()
 
-	if err := Run(&wr, fsys, tmplPaths, valueFiles); err != nil {
-		ErrUnexpected(t, err)
-	} else if got := wr.String(); got != want {
-		ErrNotEqual(t, got, want)
+	if assert.NoError(t, err) {
+		assert.Equal(t, want, got)
 	}
 }
 
@@ -40,30 +38,12 @@ func TestParseTemplates(t *testing.T) {
 
 	got, err := ParseTemplates(fsys, tmplPaths)
 
-	if err != nil {
-		ErrUnexpected(t, err)
-	} else {
-		if got == nil {
-			ErrNotEqual(t, got, "not nil")
-		} else {
-			// Sort to avoid flaky tests
-			tmpls := got.Templates()
-			slices.SortFunc(tmpls, func(a, b *template.Template) int {
-				return cmp.Compare(a.Name(), b.Name())
-			})
-			slices.Sort(tmplPaths)
+	if assert.NoError(t, err) {
+		tmplNames := lo.Map(got.Templates(), func(t *template.Template, _ int) string {
+			return t.Name()
+		})
 
-			for i, tp := range tmpls {
-				want := tmplPaths[i]
-				if tp.Name() != want {
-					ErrNotEqual(
-						t,
-						fmt.Sprintf("name: %d: %s", i, tp.Name()),
-						fmt.Sprintf("name: %d: %s", i, want),
-					)
-				}
-			}
-		}
+		assert.ElementsMatch(t, tmplPaths, tmplNames)
 	}
 }
 
@@ -104,10 +84,8 @@ func TestReadValueFiles(t *testing.T) {
 		},
 		func(t *testing.T, tc *testCase) {
 			got, err := ReadValueFiles(tc.fsys, tc.valueFiles)
-			if err != nil {
-				ErrUnexpected(t, err)
-			} else if !reflect.DeepEqual(got, tc.want) {
-				ErrNotEqual(t, got, tc.want)
+			if assert.NoError(t, err) {
+				assert.Equal(t, tc.want, got)
 			}
 		},
 	)

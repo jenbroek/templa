@@ -19,11 +19,3 @@ func RunTestCases[T any](t *testing.T, tcs map[string]T, fn func(t *testing.T, t
 		})
 	}
 }
-
-func ErrUnexpected(t *testing.T, err error) {
-	t.Errorf("unexpected err: %v", err)
-}
-
-func ErrNotEqual[T1, T2 any](t *testing.T, got T1, want T2) {
-	t.Errorf("got: %v, want %v", got, want)
-}

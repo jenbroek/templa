@@ -1,10 +1,10 @@
 package main_test
 
 import (
-	"reflect"
 	"testing"
 
 	. "github.com/jensbrks/templa"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMergeMaps(t *testing.T) {
@@ -98,12 +98,13 @@ func TestMergeMaps(t *testing.T) {
 			},
 		},
 		func(t *testing.T, tc *testCase) {
-			if err := MergeMaps(tc.dst, tc.src); err != nil {
-				if !tc.fail {
-					ErrUnexpected(t, err)
+			err := MergeMaps(tc.dst, tc.src)
+			if tc.fail {
+				assert.Error(t, err)
+			} else {
+				if assert.NoError(t, err) {
+					assert.Equal(t, tc.want, tc.dst)
 				}
-			} else if !reflect.DeepEqual(tc.dst, tc.want) {
-				ErrNotEqual(t, tc.dst, tc.want)
 			}
 		},
 	)
