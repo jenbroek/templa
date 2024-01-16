@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,12 +31,12 @@ func init() {
 func main() {
 	pflag.Parse()
 
-	var tmplPaths []string
-
 	if *versionFlag > 0 {
 		log.Printf("%s-%s\n", programName, VERSION)
 		return
 	}
+
+	var tmplPaths []string
 
 	if pflag.NArg() == 0 {
 		tmplPaths = []string{os.Stdin.Name()}
@@ -42,33 +44,33 @@ func main() {
 		tmplPaths = pflag.Args()
 	}
 
-	if err := run(tmplPaths); err != nil {
+	if err := run(os.Stdout, new(osFS), tmplPaths, *valueFiles); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run(tmplPaths []string) error {
-	tmpl, err := parseTemplates(tmplPaths)
+func run(wr io.Writer, fsys fs.FS, tmplPaths, valueFiles []string) error {
+	tmpl, err := parseTemplates(fsys, tmplPaths)
 	if err != nil {
 		return err
 	}
 
-	data, err := readValueFiles()
+	data, err := readValueFiles(fsys, valueFiles)
 	if err != nil {
 		return err
 	}
 
-	return tmpl.ExecuteTemplate(os.Stdout, tmpl.Name(), data)
+	return tmpl.ExecuteTemplate(wr, tmpl.Name(), data)
 }
 
-func parseTemplates(tmplPaths []string) (*template.Template, error) {
+func parseTemplates(fsys fs.FS, tmplPaths []string) (*template.Template, error) {
 	var parentTmpl *template.Template
 
 	for _, tmplPath := range tmplPaths {
 		// `template#Template.ParseFiles` forces the template name to be the basename
 		// of the specified path(s). In order to use the full (relative) path, we
 		// must call `template#Template.Parse` ourselves.
-		bytes, err := os.ReadFile(tmplPath)
+		bytes, err := fs.ReadFile(fsys, tmplPath)
 		if err != nil {
 			return nil, err
 		}
@@ -89,11 +91,11 @@ func parseTemplates(tmplPaths []string) (*template.Template, error) {
 	return parentTmpl, nil
 }
 
-func readValueFiles() (map[string]any, error) {
+func readValueFiles(fsys fs.FS, valueFiles []string) (map[string]any, error) {
 	data := make(map[string]any)
 
-	for _, valueFile := range *valueFiles {
-		bytes, err := os.ReadFile(valueFile)
+	for _, fp := range valueFiles {
+		bytes, err := fs.ReadFile(fsys, fp)
 		if err != nil {
 			return nil, err
 		}

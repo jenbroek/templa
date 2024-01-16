@@ -1,6 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io/fs"
+	"os"
+)
+
+// See: https://github.com/golang/go/issues/44286
+type osFS struct{}
+
+func (*osFS) Open(name string) (fs.File, error) { return os.Open(name) }
 
 var errDifferentTypes = fmt.Errorf("cannot merge different map/slice types")
 
