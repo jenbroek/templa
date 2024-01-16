@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/pflag"
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,13 +51,21 @@ func main() {
 }
 
 func run(wr io.Writer, fsys fs.FS, tmplPaths, valueFiles []string) error {
-	tmpl, err := parseTemplates(fsys, tmplPaths)
-	if err != nil {
-		return err
-	}
+	var g errgroup.Group
+	var tmpl *template.Template
+	var data map[string]any
 
-	data, err := readValueFiles(fsys, valueFiles)
-	if err != nil {
+	g.Go(func() (err error) {
+		tmpl, err = parseTemplates(fsys, tmplPaths)
+		return
+	})
+
+	g.Go(func() (err error) {
+		data, err = readValueFiles(fsys, valueFiles)
+		return
+	})
+
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
