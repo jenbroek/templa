@@ -121,9 +121,7 @@ func readValueFiles(fsys fs.FS, valueFiles []string) (map[string]any, error) {
 			return nil, err
 		}
 
-		if err = maps.Merge(data, m); err != nil {
-			return nil, err
-		}
+		maps.Merge(data, m)
 	}
 
 	return data, nil

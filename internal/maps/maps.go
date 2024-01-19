@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrDifferentTypes = errors.New("cannot merge non-assignable types")
+	errDifferentTypes = errors.New("cannot merge non-assignable types")
 
 	mergeFunc reflect.Value
 )
@@ -15,15 +15,15 @@ func init() {
 	mergeFunc = reflect.ValueOf(merge)
 }
 
-func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) error {
+func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) {
 	if dst == nil {
-		return nil
+		return
 	}
 
-	return merge(reflect.ValueOf(dst), reflect.ValueOf(src))
+	merge(reflect.ValueOf(dst), reflect.ValueOf(src))
 }
 
-func merge(dst, src reflect.Value) error {
+func merge(dst, src reflect.Value) {
 	it := src.MapRange()
 	for it.Next() {
 		sK := it.Key()
@@ -41,13 +41,10 @@ func merge(dst, src reflect.Value) error {
 			case reflect.Map:
 				if sV.Kind() == reflect.Map && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
 					args := []reflect.Value{reflect.ValueOf(dV), reflect.ValueOf(sV)}
-					if r := mergeFunc.Call(args); r != nil {
-						err, _ := r[0].Interface().(error)
-						return err
-					}
+					mergeFunc.Call(args)
 					continue
 				} else {
-					return ErrDifferentTypes
+					panic(errDifferentTypes)
 				}
 			case reflect.Slice:
 				if sV.Kind() == reflect.Slice && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
@@ -56,17 +53,15 @@ func merge(dst, src reflect.Value) error {
 					}
 					sV = dV
 				} else {
-					return ErrDifferentTypes
+					panic(errDifferentTypes)
 				}
 			default:
 				if !sV.Type().AssignableTo(dV.Type()) {
-					return ErrDifferentTypes
+					panic(errDifferentTypes)
 				}
 			}
 		}
 
 		dst.SetMapIndex(sK, sV)
 	}
-
-	return nil
 }
