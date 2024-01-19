@@ -5,22 +5,19 @@ import (
 	"reflect"
 )
 
-var (
-	errDifferentTypes = errors.New("cannot merge non-assignable types")
-
-	mergeFunc reflect.Value
-)
-
-func init() {
-	mergeFunc = reflect.ValueOf(merge)
-}
-
 func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) {
 	if dst == nil {
 		return
 	}
 
 	merge(reflect.ValueOf(dst), reflect.ValueOf(src))
+}
+
+var errDifferentTypes = errors.New("cannot merge non-assignable types")
+var mergeFunc reflect.Value
+
+func init() {
+	mergeFunc = reflect.ValueOf(merge)
 }
 
 func merge(dst, src reflect.Value) {

@@ -21,17 +21,16 @@ type osFS struct{}
 func (*osFS) Open(name string) (fs.File, error) { return os.Open(name) }
 
 var (
-	VERSION     string
-	programName = filepath.Base(os.Args[0])
+	VERSION string
 
 	openDelim   = pflag.StringP("open-delim", "o", "{{", "Define the opening delimiter")
 	closeDelim  = pflag.StringP("close-delim", "c", "}}", "Define the closing delimiter")
-	valueFiles  = pflag.StringSliceP("values", "f", []string{}, "List of value files to use for templating")
+	valueFiles  = pflag.StringSliceP("value-files", "f", []string{}, "List of value files to use for templating")
 	versionFlag = pflag.CountP("version", "v", "Print version information to stderr and exit")
 )
 
 func init() {
-	log.SetPrefix(programName + ": ")
+	log.SetPrefix(filepath.Base(os.Args[0]) + ": ")
 	// Clear flags
 	log.SetFlags(0)
 }
@@ -40,7 +39,7 @@ func main() {
 	pflag.Parse()
 
 	if *versionFlag > 0 {
-		log.Printf("%s-%s\n", programName, VERSION)
+		log.Printf("v%s\n", VERSION)
 		return
 	}
 

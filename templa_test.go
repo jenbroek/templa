@@ -13,7 +13,7 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	var wr bytes.Buffer
+	wr := new(bytes.Buffer)
 	fsys := fstest.MapFS{
 		"greeting":  {Data: []byte("hello {{ .name }}")},
 		"data.yaml": {Data: []byte("name: Bob")},
@@ -22,7 +22,7 @@ func TestRun(t *testing.T) {
 	valueFiles := []string{"data.yaml"}
 
 	want := "hello Bob"
-	err := run(&wr, fsys, tmplPaths, valueFiles)
+	err := run(wr, fsys, tmplPaths, valueFiles)
 	got := wr.String()
 
 	if assert.NoError(t, err) {
