@@ -6,7 +6,6 @@ var (
 	Run            = run
 	ParseTemplates = parseTemplates
 	ReadValueFiles = readValueFiles
-	MergeMaps      = mergeMaps
 )
 
 func RunTestCases[T any](t *testing.T, tcs map[string]T, fn func(t *testing.T, tc T)) {

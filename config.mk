@@ -1,5 +1,5 @@
 # templa version
-VERSION = 0.4.0
+VERSION = 0.5.0
 
 # paths
 PREFIX = /usr/local

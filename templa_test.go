@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	. "github.com/jensbrks/templa"
+
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )

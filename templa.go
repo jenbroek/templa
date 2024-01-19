@@ -114,7 +114,7 @@ func readValueFiles(fsys fs.FS, valueFiles []string) (map[string]any, error) {
 			return nil, err
 		}
 
-		if err = mergeMaps(data, m); err != nil {
+		if err = MergeMaps(data, m); err != nil {
 			return nil, err
 		}
 	}

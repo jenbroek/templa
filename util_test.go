@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	. "github.com/jensbrks/templa"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,16 +25,10 @@ func TestMergeMaps(t *testing.T) {
 				want: map[string]any{"foo": "1", "bar": "2"},
 				fail: false,
 			},
-			"Overwrites value of same non-map/slice type": &testCase{
+			"Overwrites value of same type": &testCase{
 				dst:  map[string]any{"foo": "1"},
 				src:  map[string]any{"foo": "2"},
 				want: map[string]any{"foo": "2"},
-				fail: false,
-			},
-			"Overwrites value of different non-map/slice type": &testCase{
-				dst:  map[string]any{"foo": "1"},
-				src:  map[string]any{"foo": 1},
-				want: map[string]any{"foo": 1},
 				fail: false,
 			},
 			"Does nothing with nil dest map": &testCase{
@@ -54,28 +49,28 @@ func TestMergeMaps(t *testing.T) {
 				want: map[string]any{"foo": "1"},
 				fail: false,
 			},
-			"Merges slice key": &testCase{
+			"Merges assignable slice key": &testCase{
 				dst:  map[string]any{"nums": []any{"1"}},
-				src:  map[string]any{"nums": []any{"2"}},
-				want: map[string]any{"nums": []any{"1", "2"}},
+				src:  map[string]any{"nums": []int{2}},
+				want: map[string]any{"nums": []any{"1", 2}},
 				fail: false,
 			},
-			"Fails with non-slice and slice type": &testCase{
-				dst:  map[string]any{"nums": []any{"1"}},
-				src:  map[string]any{"nums": "2"},
+			"Fails with non-assignable types": &testCase{
+				dst:  map[string]any{"nums": "1"},
+				src:  map[string]any{"nums": 1},
 				want: nil,
 				fail: true,
 			},
-			"Fails with different slice types": &testCase{
-				dst:  map[string]any{"nums": []any{"1"}},
+			"Fails with non-assignable slice types": &testCase{
+				dst:  map[string]any{"nums": []string{"1"}},
 				src:  map[string]any{"nums": []int{2}},
 				want: nil,
 				fail: true,
 			},
-			"Merges map key": &testCase{
+			"Merges assignable map key": &testCase{
 				dst:  map[string]any{"nums": map[string]any{"1": "one"}},
-				src:  map[string]any{"nums": map[string]any{"2": "two"}},
-				want: map[string]any{"nums": map[string]any{"1": "one", "2": "two"}},
+				src:  map[string]any{"nums": map[string]int{"2": 2}},
+				want: map[string]any{"nums": map[string]any{"1": "one", "2": 2}},
 				fail: false,
 			},
 			"Merges map key deeply": &testCase{
@@ -84,14 +79,8 @@ func TestMergeMaps(t *testing.T) {
 				want: map[string]any{"nums": map[string]any{"1": map[string]any{"en": "one", "nl": "één"}}},
 				fail: false,
 			},
-			"Fails with non-map and map type": &testCase{
-				dst:  map[string]any{"nums": map[string]any{"1": "one"}},
-				src:  map[string]any{"nums": 2},
-				want: nil,
-				fail: true,
-			},
-			"Fails with different map types": &testCase{
-				dst:  map[string]any{"nums": map[string]any{"1": "one"}},
+			"Fails with non-assignable map types": &testCase{
+				dst:  map[string]any{"nums": map[string]string{"1": "one"}},
 				src:  map[string]any{"nums": map[string]int{"2": 2}},
 				want: nil,
 				fail: true,
