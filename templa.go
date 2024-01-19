@@ -8,10 +8,17 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/jensbrks/templa/internal/maps"
+
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
+
+// See: https://github.com/golang/go/issues/44286
+type osFS struct{}
+
+func (*osFS) Open(name string) (fs.File, error) { return os.Open(name) }
 
 var (
 	VERSION     string
@@ -114,7 +121,7 @@ func readValueFiles(fsys fs.FS, valueFiles []string) (map[string]any, error) {
 			return nil, err
 		}
 
-		if err = MergeMaps(data, m); err != nil {
+		if err = maps.Merge(data, m); err != nil {
 			return nil, err
 		}
 	}

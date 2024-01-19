@@ -1,14 +1,15 @@
-package main_test
+package maps_test
 
 import (
 	"testing"
 
-	. "github.com/jensbrks/templa"
+	. "github.com/jensbrks/templa/internal/maps"
+	. "github.com/jensbrks/templa/internal/testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMergeMaps(t *testing.T) {
+func TestMerge(t *testing.T) {
 	type testCase struct {
 		dst  map[string]any
 		src  map[string]any
@@ -87,7 +88,7 @@ func TestMergeMaps(t *testing.T) {
 			},
 		},
 		func(t *testing.T, tc *testCase) {
-			err := MergeMaps(tc.dst, tc.src)
+			err := Merge(tc.dst, tc.src)
 			if tc.fail {
 				assert.Error(t, err)
 			} else {

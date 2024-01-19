@@ -7,12 +7,16 @@ all: build
 build:
 	go build -ldflags $(LDFLAGS)
 
+test:
+	go test -coverpkg=./... ./...
+
 clean:
 	go clean
 	rm -f templa-$(VERSION).tar.gz
 
 dist: clean
-	install -Dt templa-$(VERSION) LICENSE README.md config.mk Makefile *.go go.mod go.sum templa.1
+	mkdir -p templa-$(VERSION)
+	cp -R LICENSE README.md config.mk Makefile *.go internal go.mod go.sum templa.1 templa-$(VERSION)
 	tar czf templa-$(VERSION).tar.gz templa-$(VERSION)
 	rm -rf templa-$(VERSION)
 
@@ -23,4 +27,4 @@ install: all
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/templa $(DESTDIR)$(MANPREFIX)/man1/templa.1
 
-.PHONY: all build clean dist install uninstall
+.PHONY: all build test clean dist install uninstall

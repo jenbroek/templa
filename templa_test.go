@@ -1,4 +1,4 @@
-package main_test
+package main
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"testing/fstest"
 	"text/template"
 
-	. "github.com/jensbrks/templa"
+	. "github.com/jensbrks/templa/internal/testing"
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ func TestRun(t *testing.T) {
 	valueFiles := []string{"data.yaml"}
 
 	want := "hello Bob"
-	err := Run(&wr, fsys, tmplPaths, valueFiles)
+	err := run(&wr, fsys, tmplPaths, valueFiles)
 	got := wr.String()
 
 	if assert.NoError(t, err) {
@@ -37,7 +37,7 @@ func TestParseTemplates(t *testing.T) {
 	}
 	tmplPaths := []string{"hello", "bye"}
 
-	got, err := ParseTemplates(fsys, tmplPaths)
+	got, err := parseTemplates(fsys, tmplPaths)
 
 	if assert.NoError(t, err) {
 		tmplNames := lo.Map(got.Templates(), func(t *template.Template, _ int) string {
@@ -84,7 +84,7 @@ func TestReadValueFiles(t *testing.T) {
 			},
 		},
 		func(t *testing.T, tc *testCase) {
-			got, err := ReadValueFiles(tc.fsys, tc.valueFiles)
+			got, err := readValueFiles(tc.fsys, tc.valueFiles)
 			if assert.NoError(t, err) {
 				assert.Equal(t, tc.want, got)
 			}

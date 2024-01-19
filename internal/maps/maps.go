@@ -1,36 +1,29 @@
-package main
+package maps
 
 import (
-	"fmt"
-	"io/fs"
-	"os"
+	"errors"
 	"reflect"
 )
 
-// See: https://github.com/golang/go/issues/44286
-type osFS struct{}
-
-func (*osFS) Open(name string) (fs.File, error) { return os.Open(name) }
-
 var (
-	errDifferentTypes = fmt.Errorf("cannot merge non-assignable types")
+	ErrDifferentTypes = errors.New("cannot merge non-assignable types")
 
-	mergeMapsInternalFunc reflect.Value
+	mergeFunc reflect.Value
 )
 
 func init() {
-	mergeMapsInternalFunc = reflect.ValueOf(mergeMapsInternal)
+	mergeFunc = reflect.ValueOf(merge)
 }
 
-func MergeMaps[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) error {
+func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) error {
 	if dst == nil {
 		return nil
 	}
 
-	return mergeMapsInternal(reflect.ValueOf(dst), reflect.ValueOf(src))
+	return merge(reflect.ValueOf(dst), reflect.ValueOf(src))
 }
 
-func mergeMapsInternal(dst, src reflect.Value) error {
+func merge(dst, src reflect.Value) error {
 	it := src.MapRange()
 	for it.Next() {
 		sK := it.Key()
@@ -48,13 +41,13 @@ func mergeMapsInternal(dst, src reflect.Value) error {
 			case reflect.Map:
 				if sV.Kind() == reflect.Map && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
 					args := []reflect.Value{reflect.ValueOf(dV), reflect.ValueOf(sV)}
-					if r := mergeMapsInternalFunc.Call(args); r != nil {
+					if r := mergeFunc.Call(args); r != nil {
 						err, _ := r[0].Interface().(error)
 						return err
 					}
 					continue
 				} else {
-					return errDifferentTypes
+					return ErrDifferentTypes
 				}
 			case reflect.Slice:
 				if sV.Kind() == reflect.Slice && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
@@ -63,11 +56,11 @@ func mergeMapsInternal(dst, src reflect.Value) error {
 					}
 					sV = dV
 				} else {
-					return errDifferentTypes
+					return ErrDifferentTypes
 				}
 			default:
 				if !sV.Type().AssignableTo(dV.Type()) {
-					return errDifferentTypes
+					return ErrDifferentTypes
 				}
 			}
 		}

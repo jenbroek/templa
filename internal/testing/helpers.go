@@ -1,12 +1,6 @@
-package main
+package testing
 
 import "testing"
-
-var (
-	Run            = run
-	ParseTemplates = parseTemplates
-	ReadValueFiles = readValueFiles
-)
 
 func RunTestCases[T any](t *testing.T, tcs map[string]T, fn func(t *testing.T, tc T)) {
 	for n, tc := range tcs {
