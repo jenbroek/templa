@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ptr[T any](t T) *T {
+	return &t
+}
+
 func TestMerge(t *testing.T) {
 	type testCase struct {
 		dst   map[string]any
@@ -30,6 +34,12 @@ func TestMerge(t *testing.T) {
 				dst:   map[string]any{"foo": "1"},
 				src:   map[string]any{"foo": "2"},
 				want:  map[string]any{"foo": "2"},
+				panic: false,
+			},
+			"Overwrites value of same pointer type": &testCase{
+				dst:   map[string]any{"foo": ptr(1)},
+				src:   map[string]any{"foo": ptr(2)},
+				want:  map[string]any{"foo": ptr(2)},
 				panic: false,
 			},
 			"Does nothing with nil dest map": &testCase{
@@ -54,6 +64,12 @@ func TestMerge(t *testing.T) {
 				dst:   map[string]any{"nums": []any{"1"}},
 				src:   map[string]any{"nums": []int{2}},
 				want:  map[string]any{"nums": []any{"1", 2}},
+				panic: false,
+			},
+			"Merges assignable pointer slice key": &testCase{
+				dst:   map[string]any{"nums": &[]any{"1"}},
+				src:   map[string]any{"nums": &[]int{2}},
+				want:  map[string]any{"nums": &[]any{"1", 2}},
 				panic: false,
 			},
 			"Panics with non-assignable types": &testCase{

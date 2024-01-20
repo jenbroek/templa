@@ -27,10 +27,10 @@ func merge(dst, src reflect.Value) {
 		sV := it.Value()
 
 		if dV := dst.MapIndex(sK); dV.IsValid() {
-			if dV.Kind() == reflect.Interface {
+			for dV.Kind() == reflect.Interface || dV.Kind() == reflect.Pointer {
 				dV = dV.Elem()
 			}
-			if sV.Kind() == reflect.Interface {
+			for sV.Kind() == reflect.Interface || sV.Kind() == reflect.Pointer {
 				sV = sV.Elem()
 			}
 
@@ -45,10 +45,11 @@ func merge(dst, src reflect.Value) {
 				}
 			case reflect.Slice:
 				if sV.Kind() == reflect.Slice && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
+					v := dV
 					for i := 0; i < sV.Len(); i++ {
-						dV = reflect.Append(dV, sV.Index(i))
+						v = reflect.Append(v, sV.Index(i))
 					}
-					sV = dV
+					sV = v
 				} else {
 					panic(errDifferentTypes)
 				}
@@ -56,6 +57,11 @@ func merge(dst, src reflect.Value) {
 				if !sV.Type().AssignableTo(dV.Type()) {
 					panic(errDifferentTypes)
 				}
+			}
+
+			if dV.CanSet() {
+				dV.Set(sV)
+				continue
 			}
 		}
 
