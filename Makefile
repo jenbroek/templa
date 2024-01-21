@@ -10,6 +10,9 @@ build:
 test:
 	go test -coverpkg=./... ./...
 
+fmt:
+	find . -name '*.go' -exec gofmt -s -w '{}' +
+
 clean:
 	go clean
 	rm -f templa-$(VERSION).tar.gz
@@ -27,4 +30,4 @@ install: all
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/templa $(DESTDIR)$(MANPREFIX)/man1/templa.1
 
-.PHONY: all build test clean dist install uninstall
+.PHONY: all build test fmt clean dist install uninstall
