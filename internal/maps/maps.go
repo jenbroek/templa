@@ -41,13 +41,13 @@ func merge(dst, src reflect.Value) {
 
 			switch dV.Kind() {
 			case reflect.Map:
-				if assignableTo(sV, dV, reflect.Map) {
+				if assignableTo(sV, dV, 1<<reflect.Map) {
 					args := []reflect.Value{reflect.ValueOf(dV), reflect.ValueOf(sV)}
 					mergeFunc.Call(args)
 					continue
 				}
 			case reflect.Slice:
-				if assignableTo(sV, dV, reflect.Slice) {
+				if assignableTo(sV, dV, 1<<reflect.Slice|1<<reflect.Array) && sV.Len() > 0 {
 					v := dV
 					for i := 0; i < sV.Len(); i++ {
 						v = reflect.Append(v, sV.Index(i))
@@ -70,8 +70,9 @@ func merge(dst, src reflect.Value) {
 	}
 }
 
-func assignableTo(v1, v2 reflect.Value, kind reflect.Kind) bool {
-	if v1.Kind() == kind {
+func assignableTo(v1, v2 reflect.Value, kinds int) bool {
+	k := 1 << v1.Kind()
+	if k&kinds == k {
 		v1ElemType := v1.Type().Elem()
 		v2ElemType := v2.Type().Elem()
 

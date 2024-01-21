@@ -42,6 +42,12 @@ func TestMerge(t *testing.T) {
 				want:  map[string]any{"foo": ptr(2)},
 				panic: false,
 			},
+			"Overwrites value of same array type": &testCase{
+				dst:   map[string]any{"foo": [1]int{1}},
+				src:   map[string]any{"foo": [1]int{2}},
+				want:  map[string]any{"foo": [1]int{2}},
+				panic: false,
+			},
 			"Does nothing with nil dest map": &testCase{
 				dst:   nil,
 				src:   map[string]any{"foo": "1"},
@@ -59,6 +65,18 @@ func TestMerge(t *testing.T) {
 				src:   map[string]any{},
 				want:  map[string]any{"foo": "1"},
 				panic: false,
+			},
+			"Merges array into assignable slice": &testCase{
+				dst:   map[string]any{"nums": []any{"1"}},
+				src:   map[string]any{"nums": [1]int{2}},
+				want:  map[string]any{"nums": []any{"1", 2}},
+				panic: false,
+			},
+			"Panics with non-assignable array types": &testCase{
+				dst:   map[string]any{"nums": [1]string{"1"}},
+				src:   map[string]any{"nums": [1]int{1}},
+				want:  nil,
+				panic: true,
 			},
 			"Merges assignable slice key": &testCase{
 				dst:   map[string]any{"nums": []any{"1"}},
