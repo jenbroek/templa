@@ -1,9 +1,15 @@
 package maps
 
-import (
-	"errors"
-	"reflect"
-)
+import "reflect"
+
+type MergeError struct {
+	SrcType string
+	DstType string
+}
+
+func (e *MergeError) Error() string {
+	return "maps: cannot assign type " + e.SrcType + " to type " + e.DstType
+}
 
 func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) {
 	if dst == nil {
@@ -13,7 +19,6 @@ func Merge[M1, M2 ~map[K]V, K comparable, V any](dst M1, src M2) {
 	merge(reflect.ValueOf(dst), reflect.ValueOf(src))
 }
 
-var errDifferentTypes = errors.New("cannot merge non-assignable types")
 var mergeFunc reflect.Value
 
 func init() {
@@ -36,26 +41,22 @@ func merge(dst, src reflect.Value) {
 
 			switch dV.Kind() {
 			case reflect.Map:
-				if sV.Kind() == reflect.Map && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
+				if assignableTo(sV, dV, reflect.Map) {
 					args := []reflect.Value{reflect.ValueOf(dV), reflect.ValueOf(sV)}
 					mergeFunc.Call(args)
 					continue
-				} else {
-					panic(errDifferentTypes)
 				}
 			case reflect.Slice:
-				if sV.Kind() == reflect.Slice && sV.Type().Elem().AssignableTo(dV.Type().Elem()) {
+				if assignableTo(sV, dV, reflect.Slice) {
 					v := dV
 					for i := 0; i < sV.Len(); i++ {
 						v = reflect.Append(v, sV.Index(i))
 					}
 					sV = v
-				} else {
-					panic(errDifferentTypes)
 				}
 			default:
 				if !sV.Type().AssignableTo(dV.Type()) {
-					panic(errDifferentTypes)
+					panic(&MergeError{sV.Type().String(), dV.Type().String()})
 				}
 			}
 
@@ -67,4 +68,17 @@ func merge(dst, src reflect.Value) {
 
 		dst.SetMapIndex(sK, sV)
 	}
+}
+
+func assignableTo(v1, v2 reflect.Value, kind reflect.Kind) bool {
+	if v1.Kind() == kind {
+		v1ElemType := v1.Type().Elem()
+		v2ElemType := v2.Type().Elem()
+
+		if v1ElemType.AssignableTo(v2ElemType) {
+			return true
+		}
+	}
+
+	panic(&MergeError{v1.Type().String(), v2.Type().String()})
 }
