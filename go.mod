@@ -1,4 +1,4 @@
-module github.com/jensbrks/templa
+module github.com/jenbroek/templa
 
 go 1.21.6
 

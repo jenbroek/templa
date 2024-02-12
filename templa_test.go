@@ -6,7 +6,7 @@ import (
 	"testing/fstest"
 	"text/template"
 
-	. "github.com/jensbrks/templa/internal/testing"
+	. "github.com/jenbroek/templa/internal/testing"
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"

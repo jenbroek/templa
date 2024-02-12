@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/jensbrks/templa/internal/maps"
+	"github.com/jenbroek/templa/internal/maps"
 
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"

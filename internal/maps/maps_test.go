@@ -3,8 +3,8 @@ package maps_test
 import (
 	"testing"
 
-	. "github.com/jensbrks/templa/internal/maps"
-	. "github.com/jensbrks/templa/internal/testing"
+	. "github.com/jenbroek/templa/internal/maps"
+	. "github.com/jenbroek/templa/internal/testing"
 
 	"github.com/stretchr/testify/assert"
 )
